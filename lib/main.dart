@@ -27,69 +27,44 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+
+  List<DocumentSnapshot> documentList =[];
+  List<String> name = [];
+  List<int> votes = [];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Baby Name Votes')),
-      body: _buildBody(context),
-    );
-  }
-
-  Widget _buildBody(BuildContext context) {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance.collection('baby').snapshots(), // babyは各々のコレクションIDに変更してください
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) return LinearProgressIndicator();
-
-        return _buildList(context, snapshot.data!.docs);
-      },
-    );
-  }
-
-  Widget _buildList(BuildContext context, List<DocumentSnapshot> snapshot) {
-    return ListView(
-      padding: const EdgeInsets.only(top: 20.0),
-      children: snapshot.map((data) => _buildListItem(context, data)).toList(),
-    );
-  }
-
-
-  Widget _buildListItem(BuildContext context, DocumentSnapshot data) {
-    final record = Record.fromSnapshot(data);
-
-    return Padding(
-      key: ValueKey(record.name),
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey),
-          borderRadius: BorderRadius.circular(5.0),
-        ),
-        child: ListTile(
-          title: Text(record.name),
-          trailing: Text(record.votes.toString()),
-          onTap: () => record.reference.update({'votes': FieldValue.increment(1)}),
-        ),
+      body: FutureBuilder(
+        future: initialize(),
+        builder: (context, snapshot) {
+          documentList.forEach((elem) {
+            name.add(elem.get('name'));
+            votes.add(elem.get('votes'));
+          });
+          return Column(
+            children: <Widget> [
+              Text(name[0] + ':' + votes[0].toString()),
+              Text(name[1] + ':' + votes[1].toString()),
+            ],
+          );
+        },
       ),
     );
   }
-}
 
-class Record {
-  final String name;
-  final int votes;
-  final DocumentReference reference;
+  Future<void> initialize () async {
+    final snapshot =
+      await FirebaseFirestore.instance.collection('baby').get();
+    documentList = snapshot.docs;
 
+    print("##################################################### initialize()");
+    documentList.forEach((elem) {
+      print(elem.get('name'));
+      print(elem.get('votes'));
+    });
+    print("##################################################### initialize()");
+  }
 
-  Record.fromMap(Map<String, dynamic> map, {required this.reference})
-      : assert(map['name'] != null),
-        assert(map['votes'] != null),
-        name = map['name'],
-        votes = map['votes'];
-
-  Record.fromSnapshot(DocumentSnapshot snapshot)
-      : this.fromMap(snapshot.data() as Map<String, dynamic>, reference: snapshot.reference);
-
-  @override
-  String toString() => "Record<$name:$votes>";
 }
