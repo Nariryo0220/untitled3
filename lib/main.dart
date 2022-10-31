@@ -101,18 +101,12 @@ class _MyHomePageState extends State<MyHomePage> {
             onMapCreated: (GoogleMapController controller) {
               _controller = controller;
             },
-            markers: [
-              Marker(
-                  markerId:(MarkerId(name[0])),
-                  //position: LatLng(ido[0],keido[0])
-                  position: LatLng(idokeido[0].latitude,idokeido[0].longitude)
-              ),
-              Marker(
-                  markerId:(MarkerId(name[1])),
-                  //position: LatLng(ido[1],keido[1])
-                  position: LatLng(idokeido[1].latitude,idokeido[1].longitude)
-              ),
-            ].toSet(),
+            markers: documentList
+              .map((documents) => Marker(
+                markerId: MarkerId(documents['name']),
+                position: LatLng(documents['ido'],documents['keido']),
+              ))
+              .toSet(),
             onTap: (LatLng latLang) {
               print('Clicked: $latLang');
             },
