@@ -4,6 +4,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,6 +20,11 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Map',
+      theme: ThemeData(
+        textTheme: GoogleFonts.zenMaruGothicTextTheme(
+          Theme.of(context).textTheme
+        ),
+      ),
       home: MyHomePage(),
     );
   }
@@ -98,7 +104,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Map')),
+      appBar: AppBar(title: Text('青森県トイレマップ')),
       body: FutureBuilder(
         future: initialize(),
         builder: (context, snapshot) {
@@ -168,9 +174,7 @@ class _MyHomePageState extends State<MyHomePage> {
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
-                  ListTile(
-                    title: Text(documents['namae']),
-                  ),
+                  Text(documents['namae'],style: TextStyle(fontSize: 20)),
                   ListTile(
                     title: Text(documents['zyuusyo']),
                   ),
