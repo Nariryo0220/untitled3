@@ -48,6 +48,7 @@ class _MyHomePageState extends State<MyHomePage> {
   List<String> zyouhou1 = [];
   List<String> zyouhou2 = [];
   List<String> zyouhou3 = [];
+  List<String> zyouhou4 = [];
   List<String> zyuusyo = [];
 
 
@@ -57,6 +58,10 @@ class _MyHomePageState extends State<MyHomePage> {
   late LatLng _initialPosition;
   late bool _loading;
   late GoogleMap gm;
+  late Divider line;
+  late Icon coloricon;
+
+
 
   GeoPoint pos = const GeoPoint(0.0, 0.0);
 
@@ -65,17 +70,23 @@ class _MyHomePageState extends State<MyHomePage> {
     distanceFilter: 100,
   );
 
+
+
   @override
   void initState() {
     super.initState();
-
     // Future(() async {
     //
     //   }
     // });
-
+    // gm = GoogleMap(
+    //   initialCameraPosition: CameraPosition(
+    //     target: ,
+    //   ),
+    // );
     _loading = true;
     _getUserLocation();
+
   }
 
   //現在地を取得する
@@ -104,9 +115,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('青森県トイレマップ')),
+      appBar: AppBar(title: Text('青森県トイレマップ'),backgroundColor: Colors.orange,),
       body: FutureBuilder(
-        future: initialize(),
+        future: initialize1(),
         builder: (context, snapshot) {
           documentList.forEach((elem) {
             ido.add(elem.get('ido'));
@@ -116,8 +127,10 @@ class _MyHomePageState extends State<MyHomePage> {
             zyouhou1.add(elem.get('zyouhou1'));
             zyouhou2.add(elem.get('zyouhou2'));
             zyouhou3.add(elem.get('zyouhou3'));
+            zyouhou3.add(elem.get('zyouhou4'));
             zyuusyo.add(elem.get('zyuusyo'));
           });
+
           return gm;
         },
       ),
@@ -126,13 +139,12 @@ class _MyHomePageState extends State<MyHomePage> {
 
 
 
-  Future<void> initialize() async {
+  Future<void> initialize1() async {
     final snapshot =
     await FirebaseFirestore.instance.collection('toire').get();
     documentList = snapshot.docs;
 
-      print(
-          "##################################################### initialize()");
+      print("##################################################### initialize()");
       documentList.forEach((elem) {
         print(elem.get('ido'));
         print(elem.get('keido'));
@@ -141,14 +153,30 @@ class _MyHomePageState extends State<MyHomePage> {
         print(elem.get('zyouhou1'));
         print(elem.get('zyouhou2'));
         print(elem.get('zyouhou3'));
+        print(elem.get('zyouhou4'));
         print(elem.get('zyuusyo'));
       });
-      print(
-          "##################################################### initialize()");
+      print("##################################################### initialize()");
       initialize2();
     }
 
   Future<void> initialize2() async {
+    line =  Divider(
+      color: Colors.black54,
+      thickness: 1,
+      height: 4,
+      indent: 10,
+      endIndent: 10,
+    );
+
+    // coloricon = Icon(if (documents['kubun'] == 'コンビニ'){
+    //   BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue);
+    // }else if (documents['kubun'] == 'スーパー・生協'){
+    //   BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.huepink);
+    // }else{
+    //   BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.huered);
+    // });
+
     gm = await GoogleMap(
       initialCameraPosition: CameraPosition(
         target: _initialPosition,
@@ -160,35 +188,89 @@ class _MyHomePageState extends State<MyHomePage> {
       markers: documentList
           .map((documents) => Marker(
         markerId: MarkerId(documents['namae']),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
         position: LatLng(documents['ido'],documents['keido']),
         onTap: () {
           showModalBottomSheet(
             isScrollControlled: true,
             isDismissible: true,
             context: context,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
-            ),
-
+            // shape: RoundedRectangleBorder(
+            //   borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
+            // ),
             builder: (BuildContext context) {
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
-                  Text(documents['namae'],style: TextStyle(fontSize: 20)),
-                  ListTile(
-                    title: Text(documents['zyuusyo']),
+                  Container(
+                    height: 35,
+                    width: double.infinity,
+                    color: Colors.blueAccent,
+                    alignment: Alignment.center,
+                    child: Text(documents['namae'],style: TextStyle(color:Colors.white, fontSize: 13)),
                   ),
-                  ListTile(
-                    title: Text(documents['zyouhou1']),
+                  Row(
+                    children: [
+                      IconButton(
+                        onPressed: () {},
+                        icon: Icon(Icons.place),
+                        color: Colors.black54,
+                      ),
+                      Text(documents['zyuusyo']),
+                    ],
                   ),
-                  ListTile(
-                    title: Text(documents['zyouhou2']),
+                  line,
+                  Row(
+                    children: [
+                      IconButton(
+                        onPressed: () {},
+                        icon: Icon(Icons.local_phone),
+                        color: Colors.black54,
+                      ),
+                      Text(documents['zyouhou1']),
+                    ],
                   ),
-                  ListTile(
-                    title: Text(documents['zyouhou3']),
+                  line,
+                  Row(
+                    children: [
+                      IconButton(
+                        onPressed: () {},
+                        icon: Icon(Icons.local_parking),
+                        color: Colors.black54,
+                      ),
+                      Text(documents['zyouhou2']),
+                    ],
                   ),
-                ],
+                  line,
+                  Row(
+                    children: [
+                      IconButton(
+                        onPressed: () {},
+                        icon: Icon(Icons.accessible_outlined),
+                        color: Colors.black54,
+                      ),
+                      Text(documents['zyouhou3']),
+                    ],
+                  ),
+                  line,
+                       Row(
+                        children: [
+                          IconButton(
+                            onPressed: () {},
+                            icon: Icon(Icons.other_houses),
+                            color: Colors.black54,
+                          ),
+                          Flexible(
+                            child: Container(
+                              padding:  EdgeInsets.only(right: 10.0),
+                              child:  Text(documents['zyouhou4']),
+                              ),
+                            ),
+                          // Text(documents['zyouhou4'],),
+                        ],
+                      ),
 
+                ],
               );
             },
           );
