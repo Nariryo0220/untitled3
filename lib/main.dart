@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -41,6 +42,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   List<DocumentSnapshot> documentList = [];
 
+  //List<BitmapDescriptor> colorList = [];
+
   List<double> ido = [];
   List<double> keido = [];
   List<String> kubun =[];
@@ -50,6 +53,7 @@ class _MyHomePageState extends State<MyHomePage> {
   List<String> zyouhou3 = [];
   List<String> zyouhou4 = [];
   List<String> zyuusyo = [];
+  List<String> color = [];
 
 
   Position? currentPosition;
@@ -58,9 +62,11 @@ class _MyHomePageState extends State<MyHomePage> {
   late LatLng _initialPosition;
   late bool _loading;
   late GoogleMap gm;
+  //GoogleMap?  gm;
   late Divider line;
-  late Icon coloricon;
+  //late BitmapDescriptor markercolor;
 
+  //String markerkubun = "";
 
 
   GeoPoint pos = const GeoPoint(0.0, 0.0);
@@ -84,8 +90,15 @@ class _MyHomePageState extends State<MyHomePage> {
     //     target: ,
     //   ),
     // );
+
+    // gm = GoogleMap(initialCameraPosition:
+    // CameraPosition (
+    //     target: LatLng(40,140)
+    // ),
+    // );
     _loading = true;
     _getUserLocation();
+    //_markercolor();
 
   }
 
@@ -113,9 +126,36 @@ class _MyHomePageState extends State<MyHomePage> {
         });
   }
 
+  // void _markercolor(){
+  //   documentList.forEach((elem) {
+  //      markerkubun = elem.get('kubun');
+  //   });
+  //   for (int count = 0;  markerkubun.length < count; count++){
+  //     if (markerkubun[count] == 'コンビニ'){
+  //       //BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue);
+  //       colorList[count] = BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue);
+  //     }else if (markerkubun[count] == 'スーパー・生協'){
+  //       //BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure);
+  //       colorList[count] = BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange);
+  //     }else if (markerkubun[count] == '公衆トイレ'){
+  //       //BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed);
+  //       colorList[count] = BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen);
+  //     }
+  //   }
+  // }
+
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('青森県トイレマップ'),backgroundColor: Colors.orange,),
+      appBar: AppBar(
+        title: Text('青森県トイレマップ'),
+          backgroundColor: Colors.orange,
+        actions: [
+          IconButton(
+              icon: Icon(Icons.more_vert),
+              onPressed: () {},
+          )
+        ],
+      ),
       body: FutureBuilder(
         future: initialize1(),
         builder: (context, snapshot) {
@@ -129,9 +169,11 @@ class _MyHomePageState extends State<MyHomePage> {
             zyouhou3.add(elem.get('zyouhou3'));
             zyouhou3.add(elem.get('zyouhou4'));
             zyuusyo.add(elem.get('zyuusyo'));
+            color.add(elem.get('color'));
           });
-
           return gm;
+
+
         },
       ),
     );
@@ -155,12 +197,16 @@ class _MyHomePageState extends State<MyHomePage> {
         print(elem.get('zyouhou3'));
         print(elem.get('zyouhou4'));
         print(elem.get('zyuusyo'));
+        print(elem.get('color'));
       });
       print("##################################################### initialize()");
       initialize2();
     }
 
   Future<void> initialize2() async {
+
+    initialize3();
+
     line =  Divider(
       color: Colors.black54,
       thickness: 1,
@@ -169,13 +215,6 @@ class _MyHomePageState extends State<MyHomePage> {
       endIndent: 10,
     );
 
-    // coloricon = Icon(if (documents['kubun'] == 'コンビニ'){
-    //   BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue);
-    // }else if (documents['kubun'] == 'スーパー・生協'){
-    //   BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.huepink);
-    // }else{
-    //   BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.huered);
-    // });
 
     gm = await GoogleMap(
       initialCameraPosition: CameraPosition(
@@ -188,16 +227,19 @@ class _MyHomePageState extends State<MyHomePage> {
       markers: documentList
           .map((documents) => Marker(
         markerId: MarkerId(documents['namae']),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+        // icon: BitmapDescriptor.defaultMarkerWithHue(
+        //   documents['color']
+        // ),
+        //icon: colorList,
+        //icon: markercolor,
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
+        //icon: markercolor,
         position: LatLng(documents['ido'],documents['keido']),
         onTap: () {
           showModalBottomSheet(
             isScrollControlled: true,
             isDismissible: true,
             context: context,
-            // shape: RoundedRectangleBorder(
-            //   borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
-            // ),
             builder: (BuildContext context) {
               return Column(
                 mainAxisSize: MainAxisSize.min,
@@ -283,12 +325,12 @@ class _MyHomePageState extends State<MyHomePage> {
 
 
 
-  // Future<void> initialize3() async {
-  //   //現在地の許可
-  //   LocationPermission permission = await Geolocator.checkPermission();
-  //   if (permission == LocationPermission.denied) {
-  //     await Geolocator.requestPermission();
-  //   }
-  // }
+  Future<void> initialize3() async {
+    //現在地の許可
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      await Geolocator.requestPermission();
+    }
+  }
 
 }
