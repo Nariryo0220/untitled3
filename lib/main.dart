@@ -1,11 +1,13 @@
 import 'dart:async';
-
+import 'package:google_directions_api/google_directions_api.dart';
+import 'package:google_polyline_algorithm/google_polyline_algorithm.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -74,8 +76,8 @@ class _MyHomePageState extends State<MyHomePage> {
   final LocationSettings locationSettings = const LocationSettings(
     accuracy: LocationAccuracy.high, //正確性:highはAndroid(0-100m),iOS(10m)
     distanceFilter: 100,
-  );
 
+  );
 
 
   @override
@@ -99,7 +101,7 @@ class _MyHomePageState extends State<MyHomePage> {
     _loading = true;
     _getUserLocation();
     //_markercolor();
-
+    main();
   }
 
   //現在地を取得する
@@ -113,6 +115,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+
   //現在位置を更新し続ける
   void positionstrem() {
     positionStream =
@@ -125,6 +128,19 @@ class _MyHomePageState extends State<MyHomePage> {
               .toString()}');
         });
   }
+
+
+  // void main() {
+  //   DirectionsService.init('AIzaSyAH2vwGvsp5m8R5GHsSu-KA0oGYN2FNQ1o');
+  //
+  //   final directionsService = DirectionsService();
+  //
+  //   final request = DirectionsRequest(
+  //     origin: 'New York',
+  //     destination: 'San Francisco',
+  //     travelMode: TravelMode.driving,
+  //   );
+  // }
 
   // void _markercolor(){
   //   documentList.forEach((elem) {
@@ -149,12 +165,62 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: Text('青森県トイレマップ'),
           backgroundColor: Colors.orange,
-        actions: [
-          IconButton(
-              icon: Icon(Icons.more_vert),
-              onPressed: () {},
-          )
-        ],
+        // actions: [
+        //   IconButton(
+        //       icon: Icon(Icons.more_vert),
+        //       onPressed: () {},
+        //   )
+        // ],
+      ),
+      endDrawer: Drawer(
+        width: 210,
+        child: ListView(
+          children:  [
+            Container(
+              height: 35,
+              width: double.infinity,
+              color: Colors.blueAccent,
+              alignment: Alignment.center,
+              child:  Text("メニュー一覧",style: TextStyle(color:Colors.white, fontSize: 16)),
+            ),
+            ListTile(
+                title: Text("アプリの使い方"),
+                onTap: () {
+                  print('ontap');
+                },
+            ),
+            ListTile(
+              title: Text("トイレ情報修正案"),
+              subtitle: Text("（Google Forms）"),
+              onTap: () async {
+                  final url = Uri.parse(
+                    'https://docs.google.com/forms/d/e/1FAIpQLSczt2P7yPl4FXtT-qYfXxHPoC3Y5-mcmeffyrtmWByZRISCXA/viewform',
+                  );
+                  if (await canLaunchUrl(url)) {
+                    launchUrl(url);
+                  } else {
+                  // ignore: avoid_print
+                    print("Can't launch $url");
+                  }
+                },
+            ),
+            ListTile(
+              title: Text("アプリの評価"),
+              subtitle: Text("（Google Forms）"),
+              onTap: () async {
+                final url = Uri.parse(
+                  'https://docs.google.com/forms/d/e/1FAIpQLScuUDQ81k8TPi2w15trgbMQeUhq_fFTafpPZZF86vfldDPt0g/viewform',
+                );
+                if (await canLaunchUrl(url)) {
+                  launchUrl(url);
+                } else {
+                  // ignore: avoid_print
+                  print("Can't launch $url");
+                }
+              },
+            ),
+          ],
+        ),
       ),
       body: FutureBuilder(
         future: initialize1(),
@@ -251,6 +317,21 @@ class _MyHomePageState extends State<MyHomePage> {
                     alignment: Alignment.center,
                     child: Text(documents['namae'],style: TextStyle(color:Colors.white, fontSize: 13)),
                   ),
+                  OutlinedButton(
+                    onPressed: () {
+                      // DirectionsRequest(
+                      //   origin: LatLng(_initialPosition.latitude,_initialPosition.longitude),
+                      //   //origin: LatLng(40.82785450804999, 140.7694518836254),
+                      //   destination: LatLng(documents['ido'],documents['keido']),
+                      //   //destination: LatLng(40.82820793133797, 140.76831535210962),
+                      //   travelMode: TravelMode.driving,
+                      // );
+
+                      //request;
+                    },
+                    child: Text('ルート検索'),
+                  ),
+                  line,
                   Row(
                     children: [
                       IconButton(
