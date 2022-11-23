@@ -1,6 +1,5 @@
 import 'dart:async';
-import 'package:google_directions_api/google_directions_api.dart';
-import 'package:google_polyline_algorithm/google_polyline_algorithm.dart';
+//import 'package:google_directions_api/google_directions_api.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -8,6 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -71,12 +71,19 @@ class _MyHomePageState extends State<MyHomePage> {
   //String markerkubun = "";
 
 
+  PolylinePoints polylinePoints = PolylinePoints();
+  String googleAPiKey = "";
+  Map<PolylineId, Polyline> polylines = {};
+
+  LatLng startLocation = LatLng(40.82994117,140.7688488);
+  LatLng endLocation = LatLng(40.8274858,140.7665709);
+
+
   GeoPoint pos = const GeoPoint(0.0, 0.0);
 
   final LocationSettings locationSettings = const LocationSettings(
     accuracy: LocationAccuracy.high, //正確性:highはAndroid(0-100m),iOS(10m)
     distanceFilter: 100,
-
   );
 
 
@@ -100,8 +107,9 @@ class _MyHomePageState extends State<MyHomePage> {
     // );
     _loading = true;
     _getUserLocation();
+    getDirections();
     //_markercolor();
-    main();
+    //main();
   }
 
   //現在地を取得する
@@ -131,7 +139,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
 
   // void main() {
-  //   DirectionsService.init('AIzaSyAH2vwGvsp5m8R5GHsSu-KA0oGYN2FNQ1o');
+  //   DirectionsService.init('自分のAPIキー');
   //
   //   final directionsService = DirectionsService();
   //
@@ -159,6 +167,39 @@ class _MyHomePageState extends State<MyHomePage> {
   //     }
   //   }
   // }
+
+  void getDirections() async {
+    List<LatLng> polylineCoordinates = [];
+
+    PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
+      googleAPiKey,
+      PointLatLng(startLocation.latitude, startLocation.longitude),
+      PointLatLng(endLocation.latitude, endLocation.longitude),
+      travelMode: TravelMode.driving,
+    );
+    if (result.points.isNotEmpty) {
+      result.points.forEach((PointLatLng point) {
+        polylineCoordinates.add(LatLng(point.latitude, point.longitude));
+      });
+    } else {
+      print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+      print(result.errorMessage);
+      print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    }
+    _addPolyLine(polylineCoordinates);
+  }
+
+  _addPolyLine(List<LatLng> polylineCoordinates) {
+    PolylineId id = PolylineId("poly");
+    Polyline polyline = Polyline(
+      polylineId: id,
+      color: Colors.deepPurpleAccent,
+      points: polylineCoordinates,
+      width: 4,
+    );
+    polylines[id] = polyline;
+    setState(() {});
+  }
 
   Widget build(BuildContext context) {
     return Scaffold(
@@ -281,7 +322,6 @@ class _MyHomePageState extends State<MyHomePage> {
       endIndent: 10,
     );
 
-
     gm = await GoogleMap(
       initialCameraPosition: CameraPosition(
         target: _initialPosition,
@@ -318,16 +358,14 @@ class _MyHomePageState extends State<MyHomePage> {
                     child: Text(documents['namae'],style: TextStyle(color:Colors.white, fontSize: 13)),
                   ),
                   OutlinedButton(
-                    onPressed: () {
-                      // DirectionsRequest(
-                      //   origin: LatLng(_initialPosition.latitude,_initialPosition.longitude),
-                      //   //origin: LatLng(40.82785450804999, 140.7694518836254),
-                      //   destination: LatLng(documents['ido'],documents['keido']),
-                      //   //destination: LatLng(40.82820793133797, 140.76831535210962),
-                      //   travelMode: TravelMode.driving,
-                      // );
+                    onPressed: () async {
 
-                      //request;
+                      //   final request = DirectionsRequest(
+                      //     origin: LatLng(40.82786796872886, 140.76960330877847),
+                      //     destination: LatLng(documents['ido'],documents['keido']),
+                      //     travelMode: TravelMode.driving,
+                      //   );
+                      // request;
                     },
                     child: Text('ルート検索'),
                   ),
@@ -400,6 +438,7 @@ class _MyHomePageState extends State<MyHomePage> {
         },
       ))
           .toSet(),
+      polylines: Set<Polyline>.of(polylines.values),
       myLocationEnabled: true,
     );
   }
