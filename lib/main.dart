@@ -15,7 +15,10 @@ void main() async {
   runApp(MyApp());
 }
 
-
+class Secrets {
+  // Google Maps APIキーをここに追加
+  static const API_KEY = 'AIzaSyBn6KjdxezzZLWxIyixrTsiZkCzwXEiOw8';
+}
 
 
 class MyApp extends StatelessWidget {
@@ -71,12 +74,15 @@ class _MyHomePageState extends State<MyHomePage> {
   //String markerkubun = "";
 
 
-  PolylinePoints polylinePoints = PolylinePoints();
-  String googleAPiKey = "";
+  late PolylinePoints polylinePoints;
+  List<LatLng> polylineCoordinates = [];
   Map<PolylineId, Polyline> polylines = {};
 
-  LatLng startLocation = LatLng(40.82994117,140.7688488);
-  LatLng endLocation = LatLng(40.8274858,140.7665709);
+  //LatLng startLocation = LatLng(40.827813092184925, 140.76945454833634);
+  //LatLng endLocation = LatLng(40.8274858,140.7665709);
+
+  // LatLng startLocation = LatLng(0,0);
+  // LatLng endLocation = LatLng(0,0);
 
 
   GeoPoint pos = const GeoPoint(0.0, 0.0);
@@ -107,7 +113,7 @@ class _MyHomePageState extends State<MyHomePage> {
     // );
     _loading = true;
     _getUserLocation();
-    getDirections();
+    //getDirections();
     //_markercolor();
     //main();
   }
@@ -137,18 +143,54 @@ class _MyHomePageState extends State<MyHomePage> {
         });
   }
 
-
-  // void main() {
-  //   DirectionsService.init('自分のAPIキー');
+  // Future<bool> _RouteDistance(
+  //     ) async {
+  //   try {
+  //     double startLatitude = 0.0;
+  //     double startLongitude = 0.0;
+  //     double destinationLatitude = 0.0;
+  //     double destinationLongitude = 0.0;
   //
-  //   final directionsService = DirectionsService();
-  //
-  //   final request = DirectionsRequest(
-  //     origin: 'New York',
-  //     destination: 'San Francisco',
-  //     travelMode: TravelMode.driving,
-  //   );
+  //     await _createPolylines(
+  //         startLatitude,
+  //         startLongitude,
+  //         destinationLatitude,
+  //         destinationLongitude
+  //     );
+  //     return true;
+  //   } catch (e) {
+  //     print(e);
+  //   }
+  //   return false;
   // }
+
+  _createPolylines(
+      double startLatitude,
+      double startLongitude,
+      double destinationLatitude,
+      double destinationLongitude,
+      ) async {
+    polylinePoints = PolylinePoints();
+    PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
+      Secrets.API_KEY,
+      PointLatLng(startLatitude, startLongitude),
+      PointLatLng(destinationLatitude, destinationLongitude),
+      travelMode: TravelMode.walking,
+    );
+    if (result.points.isNotEmpty) {
+      result.points.forEach((PointLatLng point) {
+        polylineCoordinates.add(LatLng(point.latitude, point.longitude));
+      });
+    }
+    PolylineId id = PolylineId("poly");
+    Polyline polyline = Polyline(
+      polylineId: id,
+      color: Colors.blueAccent,
+      points: polylineCoordinates,
+      width: 5,
+    );
+    polylines[id] = polyline;
+  }
 
   // void _markercolor(){
   //   documentList.forEach((elem) {
@@ -168,38 +210,9 @@ class _MyHomePageState extends State<MyHomePage> {
   //   }
   // }
 
-  void getDirections() async {
-    List<LatLng> polylineCoordinates = [];
 
-    PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
-      googleAPiKey,
-      PointLatLng(startLocation.latitude, startLocation.longitude),
-      PointLatLng(endLocation.latitude, endLocation.longitude),
-      travelMode: TravelMode.driving,
-    );
-    if (result.points.isNotEmpty) {
-      result.points.forEach((PointLatLng point) {
-        polylineCoordinates.add(LatLng(point.latitude, point.longitude));
-      });
-    } else {
-      print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-      print(result.errorMessage);
-      print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-    }
-    _addPolyLine(polylineCoordinates);
-  }
 
-  _addPolyLine(List<LatLng> polylineCoordinates) {
-    PolylineId id = PolylineId("poly");
-    Polyline polyline = Polyline(
-      polylineId: id,
-      color: Colors.deepPurpleAccent,
-      points: polylineCoordinates,
-      width: 4,
-    );
-    polylines[id] = polyline;
-    setState(() {});
-  }
+
 
   Widget build(BuildContext context) {
     return Scaffold(
@@ -288,6 +301,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
 
 
+
+
+
   Future<void> initialize1() async {
     final snapshot =
     await FirebaseFirestore.instance.collection('toire').get();
@@ -359,6 +375,12 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                   OutlinedButton(
                     onPressed: () async {
+                      //_RouteDistance();
+                      // startLocation = LatLng(_initialPosition.latitude,_initialPosition.longitude);
+                      // endLocation = LatLng(documents['ido'],documents['keido']);
+
+                      await _createPolylines(_initialPosition.latitude,_initialPosition.longitude,documents['ido'],documents['keido']);
+                      //await _createPolylines(40.783322187035125, 140.78020784818528,40.78982778674344, 140.7537299213256);
 
                       //   final request = DirectionsRequest(
                       //     origin: LatLng(40.82786796872886, 140.76960330877847),
@@ -438,7 +460,6 @@ class _MyHomePageState extends State<MyHomePage> {
         },
       ))
           .toSet(),
-      polylines: Set<Polyline>.of(polylines.values),
       myLocationEnabled: true,
     );
   }
