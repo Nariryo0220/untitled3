@@ -69,7 +69,7 @@ class _MyHomePageState extends State<MyHomePage> {
   //route変数
   List<LatLng> points = [];
   MapsRoutes route = new MapsRoutes();
-  String googleApiKey = 'AIzaSyBn6KjdxezzZLWxIyixrTsiZkCzwXEiOw8';
+  String googleApiKey = '';
 
 
   GeoPoint pos = const GeoPoint(0.0, 0.0);
