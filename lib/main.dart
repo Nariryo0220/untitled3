@@ -1,5 +1,4 @@
 import 'dart:async';
-//import 'package:google_directions_api/google_directions_api.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -7,19 +6,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:google_maps_routes/google_maps_routes.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   runApp(MyApp());
 }
-
-class Secrets {
-  // Google Maps APIキーをここに追加
-  static const API_KEY = 'AIzaSyBn6KjdxezzZLWxIyixrTsiZkCzwXEiOw8';
-}
-
 
 class MyApp extends StatelessWidget {
   @override
@@ -73,16 +66,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
   //String markerkubun = "";
 
-
-  late PolylinePoints polylinePoints;
-  List<LatLng> polylineCoordinates = [];
-  Map<PolylineId, Polyline> polylines = {};
-
-  //LatLng startLocation = LatLng(40.827813092184925, 140.76945454833634);
-  //LatLng endLocation = LatLng(40.8274858,140.7665709);
-
-  // LatLng startLocation = LatLng(0,0);
-  // LatLng endLocation = LatLng(0,0);
+  //route変数
+  List<LatLng> points = [];
+  MapsRoutes route = new MapsRoutes();
+  String googleApiKey = 'AIzaSyBn6KjdxezzZLWxIyixrTsiZkCzwXEiOw8';
 
 
   GeoPoint pos = const GeoPoint(0.0, 0.0);
@@ -96,26 +83,8 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    // Future(() async {
-    //
-    //   }
-    // });
-    // gm = GoogleMap(
-    //   initialCameraPosition: CameraPosition(
-    //     target: ,
-    //   ),
-    // );
-
-    // gm = GoogleMap(initialCameraPosition:
-    // CameraPosition (
-    //     target: LatLng(40,140)
-    // ),
-    // );
     _loading = true;
     _getUserLocation();
-    //getDirections();
-    //_markercolor();
-    //main();
   }
 
   //現在地を取得する
@@ -143,54 +112,7 @@ class _MyHomePageState extends State<MyHomePage> {
         });
   }
 
-  // Future<bool> _RouteDistance(
-  //     ) async {
-  //   try {
-  //     double startLatitude = 0.0;
-  //     double startLongitude = 0.0;
-  //     double destinationLatitude = 0.0;
-  //     double destinationLongitude = 0.0;
-  //
-  //     await _createPolylines(
-  //         startLatitude,
-  //         startLongitude,
-  //         destinationLatitude,
-  //         destinationLongitude
-  //     );
-  //     return true;
-  //   } catch (e) {
-  //     print(e);
-  //   }
-  //   return false;
-  // }
 
-  _createPolylines(
-      double startLatitude,
-      double startLongitude,
-      double destinationLatitude,
-      double destinationLongitude,
-      ) async {
-    polylinePoints = PolylinePoints();
-    PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
-      Secrets.API_KEY,
-      PointLatLng(startLatitude, startLongitude),
-      PointLatLng(destinationLatitude, destinationLongitude),
-      travelMode: TravelMode.walking,
-    );
-    if (result.points.isNotEmpty) {
-      result.points.forEach((PointLatLng point) {
-        polylineCoordinates.add(LatLng(point.latitude, point.longitude));
-      });
-    }
-    PolylineId id = PolylineId("poly");
-    Polyline polyline = Polyline(
-      polylineId: id,
-      color: Colors.blueAccent,
-      points: polylineCoordinates,
-      width: 5,
-    );
-    polylines[id] = polyline;
-  }
 
   // void _markercolor(){
   //   documentList.forEach((elem) {
@@ -219,12 +141,6 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: Text('青森県トイレマップ'),
           backgroundColor: Colors.orange,
-        // actions: [
-        //   IconButton(
-        //       icon: Icon(Icons.more_vert),
-        //       onPressed: () {},
-        //   )
-        // ],
       ),
       endDrawer: Drawer(
         width: 210,
@@ -291,11 +207,12 @@ class _MyHomePageState extends State<MyHomePage> {
             zyuusyo.add(elem.get('zyuusyo'));
             color.add(elem.get('color'));
           });
-          return gm;
 
+          return gm;
 
         },
       ),
+
     );
   }
 
@@ -375,19 +292,30 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                   OutlinedButton(
                     onPressed: () async {
-                      //_RouteDistance();
-                      // startLocation = LatLng(_initialPosition.latitude,_initialPosition.longitude);
-                      // endLocation = LatLng(documents['ido'],documents['keido']);
+                      points.addAll(
+                        [
+                          LatLng(_initialPosition.latitude,_initialPosition.longitude),
+                          LatLng(documents['ido'],documents['keido']),
+                        ]
+                      );
+                         await route.drawRoute(points, 'Test routes',
+                            Color.fromRGBO(0,191,255, 1.0), googleApiKey,
+                            travelMode: TravelModes.walking);
+                      Navigator.of(context).pop();
 
-                      await _createPolylines(_initialPosition.latitude,_initialPosition.longitude,documents['ido'],documents['keido']);
-                      //await _createPolylines(40.783322187035125, 140.78020784818528,40.78982778674344, 140.7537299213256);
+                      // Positioned(
+                      //   left: 10,
+                      //   bottom: 45,
+                      //   child: FloatingActionButton(
+                      //     child: Icon(Icons.logout),
+                      //     onPressed: () {
+                      //       route.routes.clear();
+                      //       setState(() {});
+                      //     },
+                      //   ),
+                      // );
 
-                      //   final request = DirectionsRequest(
-                      //     origin: LatLng(40.82786796872886, 140.76960330877847),
-                      //     destination: LatLng(documents['ido'],documents['keido']),
-                      //     travelMode: TravelMode.driving,
-                      //   );
-                      // request;
+                      setState(() {});
                     },
                     child: Text('ルート検索'),
                   ),
@@ -460,6 +388,7 @@ class _MyHomePageState extends State<MyHomePage> {
         },
       ))
           .toSet(),
+      polylines: route.routes,
       myLocationEnabled: true,
     );
   }
