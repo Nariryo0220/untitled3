@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_maps_routes/google_maps_routes.dart';
+import 'package:geolocator/geolocator.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,7 +43,10 @@ class _MyHomePageState extends State<MyHomePage> {
   List<DocumentSnapshot> DLR = [];
 
   //List<BitmapDescriptor> colorList = [];
+  //late BitmapDescriptor markercolor;
+  //String markerkubun = "";
 
+  //documentListに保管した値を個別に格納するList
   List<double> ido = [];
   List<double> keido = [];
   List<String> kubun =[];
@@ -56,35 +59,43 @@ class _MyHomePageState extends State<MyHomePage> {
   List<String> color = [];
 
 
-  Position? currentPosition;
-  late GoogleMapController _controller;
+  Position? currentPosition;//現在地を更新
   late StreamSubscription<Position> positionStream;
-  late LatLng _initialPosition;
+  late LatLng _initialPosition;//初期位置
   late bool _loading;
   late GoogleMap gm;
+  late GoogleMapController _controller;
   late Divider line;
 
   //表示範囲制限用のLatlng
   late LatLng restriction1;
   late LatLng restriction2;
-  //late BitmapDescriptor markercolor;
 
-  //String markerkubun = "";
 
   //route変数
-  List<LatLng> points = [];
+  List<LatLng> points = [];//pointsに入っている2点間をつなげてルートが引かれる
   MapsRoutes route = new MapsRoutes();
-  //push時にAPIは削除！！
-  String googleApiKey = '';
+  String googleApiKey = '';//push時にAPIは削除！！
   String totalDistance = '距離';
-  DistanceCalculator distanceCalculator = new DistanceCalculator();
+  String destination = '目的地';
+  DistanceCalculator distanceCalculator = new DistanceCalculator();//距離を測る
 
-  GeoPoint pos = const GeoPoint(0.0, 0.0);
+
+  //GeoPoint Lmin = const GeoPoint(0.0, 0.0);
+
+  //最短
+  List<double> I = [];//緯度
+  List<double> K = [];//経度
+  List<String> N = [];//名前
+  double min = 100000.0;
+  String Nmin = '';
+  var Lmin = LatLng(0.0, 0.0);
 
   final LocationSettings locationSettings = const LocationSettings(
     accuracy: LocationAccuracy.high, //正確性:highはAndroid(0-100m),iOS(10m)
     distanceFilter: 100,
   );
+
 
 
 
@@ -232,43 +243,142 @@ class _MyHomePageState extends State<MyHomePage> {
             zyuusyo.add(elem.get('zyuusyo'));
             color.add(elem.get('color'));
           });
+          DLR.forEach((elem) {
+            N.add(elem.get('namae'));
+            I.add(elem.get('ido'));
+            K.add(elem.get('keido'));
+          });
+
           return gm;
         },
       ),
+      bottomNavigationBar: SizedBox(
+        height: 60,
+        child :BottomAppBar(
+          color: Colors.orange,
+          child: Row(
+              children: [
+                Container(
+                  margin: EdgeInsets.only(left: 5),
+                  child :SizedBox(
+                    width: 280,
+                    height: 45,
+                    child: ElevatedButton(
+                      onPressed: null,
+                      style: ButtonStyle(
+                        backgroundColor: MaterialStateProperty.all(Colors.white),
+                      ),
+                      child: Text(destination, textAlign: TextAlign.center, style: TextStyle(
+                          color:Colors.black38,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold
+                        )
+                      ),
+
+                      ),
+                    )
+                ),
+                Container(
+                  margin: EdgeInsets.only(left: 5),
+                  child: SizedBox(
+                    width: 63,
+                    height: 45,
+                    child: ElevatedButton(
+                      onPressed: null,
+                      style: ButtonStyle(
+                        backgroundColor: MaterialStateProperty.all(Colors.white),
+                      ),
+                      child: Text(totalDistance,  textAlign: TextAlign.center,style: TextStyle(
+                              color:Colors.black38,
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold
+                          ),
+                        ),
+                      ),
+                  ),
+                ),
+              ]
+          ),
+        ),
+      ),
 
 
-      floatingActionButtonLocation: FloatingActionButtonLocation.miniEndFloat,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       floatingActionButton: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            margin: EdgeInsets.only(bottom: 9),
-            child: SizedBox(
-              width: 120,
-              height: 45,
+            margin: EdgeInsets.only(top: 15),
+            child :SizedBox(
+              width: 170,
+              height: 55,
               child: FloatingActionButton.extended(
                 tooltip: 'Action!',
-                  label: Text(totalDistance, style: TextStyle(
-                      color:Colors.black38,
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold
-                    )
-                  ),
-                  backgroundColor: Colors.white.withOpacity(0.9),
-                  onPressed: null,
+                label: Text('最短ルート探索', style: TextStyle(
+                    color:Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold
+                )
                 ),
+                backgroundColor: Colors.orange,
+                onPressed: () async {
+                  Position position = await Geolocator.getCurrentPosition(
+                      desiredAccuracy: LocationAccuracy.high);
+                  if (points == null){
+                  }else{
+                    points.clear();
+                    route.routes.clear();
+                  }
+                  print('distanceInMeters============================================');
+                  for (int count=0; DLR.length > count; count++){
+                    print(N[count]);
+                    print(I[count]);
+                    print(K[count]);
+                    //distanceInMeters 2点間の距離を測る
+                    double distanceInMeters = Geolocator.distanceBetween(
+                      position.latitude, position.longitude,
+                      I[count], K[count],
+                    );
+                    print(distanceInMeters);
+                    if (min > distanceInMeters){
+                      Nmin = N[count];
+                      min = distanceInMeters;
+                      Lmin = LatLng(I[count],K[count]);
+                    } else {
+                    }
+                  }
+                  print('min $Nmin');
+                  print('min $min');
+                  print('min $Lmin');
+                  print('distanceInMeters============================================');
+                  destination = Nmin;
+                  points.addAll(
+                      [LatLng(_initialPosition.latitude,_initialPosition.longitude),
+                        LatLng(Lmin.latitude,Lmin.longitude),]
+                  );
+                  await route.drawRoute(points, 'Test routes',
+                      Color.fromRGBO(0,191,255, 1.0), googleApiKey,
+                      travelMode: TravelModes.walking);
+                  setState(() {
+                    totalDistance =
+                        distanceCalculator.calculateRouteDistance(points, decimals: 1);
+                  });
+                },
               ),
             ),
-            SizedBox(
-              width: 120,
-              height: 40,
+          ),
+          Container(
+            margin: EdgeInsets.only(top: 8),
+            child: SizedBox(
+              width: 170,
+              height: 38,
               child: FloatingActionButton.extended(
                 tooltip: 'Action!',
                 label: Text('ルート解除', style: TextStyle(
                     color:Colors.white,
                     fontSize: 13,
                     fontWeight: FontWeight.bold
-                  )
+                )
                 ),
                 backgroundColor: Colors.redAccent,
                 onPressed: () {
@@ -276,10 +386,12 @@ class _MyHomePageState extends State<MyHomePage> {
                   route.routes.clear();
                   points.clear();
                   totalDistance = '距離';
+                  destination = '目的地';
                   setState(() {});
                 },
               ),
             ),
+          ),
         ],
       ),
     );
@@ -290,20 +402,20 @@ class _MyHomePageState extends State<MyHomePage> {
     await FirebaseFirestore.instance.collection('toire').get();
     documentList = snapshot.docs;
 
-      print("##################################################### initialize1()");
-      documentList.forEach((elem) {
-        print(elem.get('ido'));
-        print(elem.get('keido'));
-        print(elem.get('kubun'));
-        print(elem.get('namae'));
-        print(elem.get('zyouhou1'));
-        print(elem.get('zyouhou2'));
-        print(elem.get('zyouhou3'));
-        print(elem.get('zyouhou4'));
-        print(elem.get('zyuusyo'));
-        print(elem.get('color'));
-      });
-      print("##################################################### initialize1()");
+      // print("##################################################### initialize1()");
+      // documentList.forEach((elem) {
+      //   print(elem.get('ido'));
+      //   print(elem.get('keido'));
+      //   print(elem.get('kubun'));
+      //   print(elem.get('namae'));
+      //   print(elem.get('zyouhou1'));
+      //   print(elem.get('zyouhou2'));
+      //   print(elem.get('zyouhou3'));
+      //   print(elem.get('zyouhou4'));
+      //   print(elem.get('zyuusyo'));
+      //   print(elem.get('color'));
+      // });
+      // print("##################################################### initialize1()");
       initialize2();
     }
 
@@ -328,7 +440,7 @@ class _MyHomePageState extends State<MyHomePage> {
         return false;
       }
     }).toList();
-    print('===========================================================');
+    print('DLR===========================================================DLR');
     print(restriction1);
     print(restriction2);
     print('MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM');
@@ -344,8 +456,9 @@ class _MyHomePageState extends State<MyHomePage> {
       print(elem.get('zyuusyo'));
       print(elem.get('color'));
     });
-    print('===========================================================');
+    print('DLR===========================================================DLR');
 
+    //GoogleMap変数
     gm = await GoogleMap(
       initialCameraPosition: CameraPosition(
         target: _initialPosition,
@@ -383,16 +496,24 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                   OutlinedButton(
                     onPressed: () async {
-                      points.addAll(
-                        [
-                          LatLng(_initialPosition.latitude,_initialPosition.longitude),
-                          LatLng(documents['ido'],documents['keido']),
-                        ]
-                      );
-                         await route.drawRoute(points, 'Test routes',
-                            Color.fromRGBO(0,191,255, 1.0), googleApiKey,
-                            travelMode: TravelModes.walking);
                       Navigator.of(context).pop();
+                      if (points == null){
+                      }else{
+                        points.clear();
+                        route.routes.clear();
+                      }
+                      destination = documents['namae'];
+                      //Geolocator.getCurrentPosition 現在地の座標を取得する
+                      Position position = await Geolocator.getCurrentPosition(
+                          desiredAccuracy: LocationAccuracy.high);
+                      points.addAll(
+                        [LatLng(position.latitude,position.longitude),
+                          LatLng(documents['ido'],documents['keido']),]
+                      );
+                      print(points);
+                      await route.drawRoute(points, 'Test routes',
+                          Color.fromRGBO(0,191,255, 1.0), googleApiKey,
+                          travelMode: TravelModes.walking);
                       setState(() {
                         totalDistance =
                             distanceCalculator.calculateRouteDistance(points, decimals: 1);
@@ -404,7 +525,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   Row(
                     children: [
                       IconButton(
-                        onPressed: () {},
+                        onPressed: null,
                         icon: Icon(Icons.place),
                         color: Colors.black54,
                       ),
@@ -415,7 +536,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   Row(
                     children: [
                       IconButton(
-                        onPressed: () {},
+                        onPressed: null,
                         icon: Icon(Icons.local_phone),
                         color: Colors.black54,
                       ),
@@ -426,7 +547,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   Row(
                     children: [
                       IconButton(
-                        onPressed: () {},
+                        onPressed: null,
                         icon: Icon(Icons.local_parking),
                         color: Colors.black54,
                       ),
@@ -437,7 +558,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   Row(
                     children: [
                       IconButton(
-                        onPressed: () {},
+                        onPressed: null,
                         icon: Icon(Icons.accessible_outlined),
                         color: Colors.black54,
                       ),
@@ -448,7 +569,7 @@ class _MyHomePageState extends State<MyHomePage> {
                        Row(
                         children: [
                           IconButton(
-                            onPressed: () {},
+                            onPressed: null,
                             icon: Icon(Icons.other_houses),
                             color: Colors.black54,
                           ),
@@ -466,8 +587,7 @@ class _MyHomePageState extends State<MyHomePage> {
             },
           );
         },
-      ))
-          .toSet(),
+      )).toSet(),
       polylines: route.routes,
       myLocationEnabled: true,
       mapToolbarEnabled: false,
