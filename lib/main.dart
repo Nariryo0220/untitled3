@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_maps_routes/google_maps_routes.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,7 +44,7 @@ class _MyHomePageState extends State<MyHomePage> {
   List<DocumentSnapshot> DLR = [];
 
   //List<BitmapDescriptor> colorList = [];
-  //late BitmapDescriptor markercolor;
+  late BitmapDescriptor markercolor;
   //String markerkubun = "";
 
   //documentListに保管した値を個別に格納するList
@@ -87,21 +88,33 @@ class _MyHomePageState extends State<MyHomePage> {
   List<double> I = [];//緯度
   List<double> K = [];//経度
   List<String> N = [];//名前
+  List<String> B = [];//区分
   double min = 100000.0;
   String Nmin = '';
   var Lmin = LatLng(0.0, 0.0);
+  var _switch1 = false;
 
   final LocationSettings locationSettings = const LocationSettings(
     accuracy: LocationAccuracy.high, //正確性:highはAndroid(0-100m),iOS(10m)
     distanceFilter: 100,
   );
 
+  _saveBool(String key, bool value) async {
+    var prefs = await SharedPreferences.getInstance();
+    prefs.setBool(key, value);
+  }
 
-
+  _restoreValues() async {
+    var prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _switch1 = prefs.getBool('bool1') ?? false;
+    });
+  }
 
   @override
   void initState() {
     super.initState();
+    _restoreValues();
     _loading = true;
     _getUserLocation();
   }
@@ -164,7 +177,7 @@ class _MyHomePageState extends State<MyHomePage> {
           backgroundColor: Colors.orange,
       ),
       endDrawer: Drawer(
-        width: 210,
+        width: 240,
         child: Column(
           children: [
             Expanded(
@@ -215,9 +228,48 @@ class _MyHomePageState extends State<MyHomePage> {
                         }
                       },
                     ),
+                    ExpansionTile(
+                      title: Row(
+                        children:[
+                          Icon(Icons.settings_applications),
+                          Text(" 最短ルート探索の設定"),
+                        ]
+                      ),
+                      children: [
+                        SwitchListTile(
+                          title: Column(
+                            children: [
+                              Text('公衆トイレを',style: TextStyle(fontSize: 12)),
+                              Row(
+                                children: [
+                                  Text('含んで検索',style: TextStyle(color:Colors.red,fontSize: 12)),
+                                  Text('/',style: TextStyle(fontSize: 12)),
+                                  Text('含まず検索',style: TextStyle(color:Colors.blue,fontSize: 12),),
+                                ],
+                              )
+                            ],
+                          ),
+                          activeColor: Colors.redAccent,
+                          activeTrackColor: Colors.red,
+                          inactiveThumbColor: Colors.lightBlueAccent,
+                          inactiveTrackColor: Colors.blueAccent,
+                          value: _switch1,
+                          onChanged: (bool value) {
+                              setState(() {
+                                _switch1 = value;
+                                _saveBool('bool1', value);
+                                print("_switch1");
+                              });
+                          }
+                      ),
+
+
+                      ],
+                    ),
                   ],
                 ),
             ),
+
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
@@ -247,61 +299,68 @@ class _MyHomePageState extends State<MyHomePage> {
             N.add(elem.get('namae'));
             I.add(elem.get('ido'));
             K.add(elem.get('keido'));
+            B.add(elem.get('kubun'));
           });
 
           return gm;
         },
       ),
       bottomNavigationBar: SizedBox(
-        height: 60,
+        height: 54,
         child :BottomAppBar(
           color: Colors.orange,
-          child: Row(
-              children: [
-                Container(
-                  margin: EdgeInsets.only(left: 5),
-                  child :SizedBox(
-                    width: 280,
-                    height: 45,
-                    child: ElevatedButton(
-                      onPressed: null,
-                      style: ButtonStyle(
-                        backgroundColor: MaterialStateProperty.all(Colors.white),
-                      ),
-                      child: Text(destination, textAlign: TextAlign.center, style: TextStyle(
-                          color:Colors.black38,
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold
-                        )
-                      ),
+          child: Column(
+            children: [
+              Row(
+                  children: [
+                    //目的地
+                    Container(
+                        margin: EdgeInsets.only(left: 5,top: 3),
+                        child :SizedBox(
+                          width: 280,
+                          height: 45,
+                          child: ElevatedButton(
+                            onPressed: null,
+                            style: ButtonStyle(
+                              backgroundColor: MaterialStateProperty.all(Colors.white),
+                            ),
+                            child: Text(destination, textAlign: TextAlign.center, style: TextStyle(
+                                color:Colors.black38,
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold
+                            )
+                            ),
 
-                      ),
-                    )
-                ),
-                Container(
-                  margin: EdgeInsets.only(left: 5),
-                  child: SizedBox(
-                    width: 63,
-                    height: 45,
-                    child: ElevatedButton(
-                      onPressed: null,
-                      style: ButtonStyle(
-                        backgroundColor: MaterialStateProperty.all(Colors.white),
-                      ),
-                      child: Text(totalDistance,  textAlign: TextAlign.center,style: TextStyle(
+                          ),
+                        )
+                    ),
+                    //距離
+                    Container(
+                      margin: EdgeInsets.only(left: 5,top: 3),
+                      child: SizedBox(
+                        width: 63,
+                        height: 45,
+                        child: ElevatedButton(
+                          onPressed: null,
+                          style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.all(Colors.white),
+                          ),
+                          child: Text(totalDistance,  textAlign: TextAlign.center,style: TextStyle(
                               color:Colors.black38,
                               fontSize: 13,
                               fontWeight: FontWeight.bold
                           ),
+                          ),
                         ),
                       ),
-                  ),
-                ),
-              ]
-          ),
+                    ),
+                  ]
+              ),
+            ],
+          )
+
         ),
       ),
-
 
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       floatingActionButton: Column(
@@ -331,15 +390,23 @@ class _MyHomePageState extends State<MyHomePage> {
                   }
                   print('distanceInMeters============================================');
                   for (int count=0; DLR.length > count; count++){
+                    //攻守トイレを含まず検索の場合スキップする
+                    print(_switch1);
+                    print(B[count]);
+                    if ((_switch1 == false) && (B[count] == '公衆トイレ')) {
+                      print('公衆トイレなので×');
+                      continue;
+                    }
                     print(N[count]);
                     print(I[count]);
                     print(K[count]);
+                    print(B[count]);
                     //distanceInMeters 2点間の距離を測る
                     double distanceInMeters = Geolocator.distanceBetween(
                       position.latitude, position.longitude,
                       I[count], K[count],
                     );
-                    print(distanceInMeters);
+                    print('距離 $distanceInMeters');
                     if (min > distanceInMeters){
                       Nmin = N[count];
                       min = distanceInMeters;
@@ -467,8 +534,7 @@ class _MyHomePageState extends State<MyHomePage> {
       onMapCreated: (GoogleMapController controller) {
         _controller = controller;
       },
-      markers: DLR
-          .map((documents) => Marker(
+      markers: DLR.map((documents) => Marker(
         markerId: MarkerId(documents['namae']),
         // icon: BitmapDescriptor.defaultMarkerWithHue(
         //   documents['color']
@@ -476,6 +542,11 @@ class _MyHomePageState extends State<MyHomePage> {
         //icon: colorList,
         //icon: markercolor,
         icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+        // icon: BitmapDescriptor.defaultMarkerWithHue(
+        //   if (documents['kubun'] = 'コンビニ'){
+        //     BitmapDescriptor.hueRed
+        //   }
+        // ),
         //icon: markercolor,
         position: LatLng(documents['ido'],documents['keido']),
         onTap: () {
