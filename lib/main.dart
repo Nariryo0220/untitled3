@@ -8,6 +8,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_maps_routes/google_maps_routes.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'AppUsage.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,10 +23,11 @@ class MyApp extends StatelessWidget {
       title: 'Map',
       theme: ThemeData(
         textTheme: GoogleFonts.zenMaruGothicTextTheme(
-          Theme.of(context).textTheme
+            Theme.of(context).textTheme
         ),
       ),
       home: MyHomePage(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
@@ -43,10 +45,6 @@ class _MyHomePageState extends State<MyHomePage> {
   //documentListから範囲制限をかけて取得したList
   List<DocumentSnapshot> DLR = [];
 
-  //List<BitmapDescriptor> colorList = [];
-  late BitmapDescriptor markercolor;
-  //String markerkubun = "";
-
   //documentListに保管した値を個別に格納するList
   List<double> ido = [];
   List<double> keido = [];
@@ -57,7 +55,6 @@ class _MyHomePageState extends State<MyHomePage> {
   List<String> zyouhou3 = [];
   List<String> zyouhou4 = [];
   List<String> zyuusyo = [];
-  List<String> color = [];
 
 
   Position? currentPosition;//現在地を更新
@@ -90,7 +87,7 @@ class _MyHomePageState extends State<MyHomePage> {
   List<String> N = [];//名前
   List<String> B = [];//区分
   double min = 100000.0;
-  String Nmin = '';
+  String Nmin = 'AIzaSyBtIK84blFlGvYkBnWQptPFNIg9BIVUlQ4';
   var Lmin = LatLng(0.0, 0.0);
   var _switch1 = false;
 
@@ -99,11 +96,11 @@ class _MyHomePageState extends State<MyHomePage> {
     distanceFilter: 100,
   );
 
+  //ボタンのON/OFFを記憶する
   _saveBool(String key, bool value) async {
     var prefs = await SharedPreferences.getInstance();
     prefs.setBool(key, value);
   }
-
   _restoreValues() async {
     var prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -117,10 +114,12 @@ class _MyHomePageState extends State<MyHomePage> {
     _restoreValues();
     _loading = true;
     _getUserLocation();
+    //return;
   }
 
   //現在地を取得する
   void _getUserLocation() async {
+  //Future<void> _getUserLocation() async {
     Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high);
     setState(() {
@@ -174,69 +173,75 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('青森県トイレマップ'),
-          backgroundColor: Colors.orange,
+        backgroundColor: Colors.orange,
       ),
       endDrawer: Drawer(
         width: 240,
         child: Column(
           children: [
             Expanded(
-                child: ListView(
-                  children:  [
-                    Container(
-                      height: 35,
-                      width: double.infinity,
-                      color: Colors.blueAccent,
-                      alignment: Alignment.center,
-                      child:  Text("メニュー一覧",style: TextStyle(
-                          color:Colors.white,
-                          fontSize: 16
-                        )
-                      ),
+              child: ListView(
+                children:  [
+                  Container(
+                    height: 35,
+                    width: double.infinity,
+                    color: Colors.blueAccent,
+                    alignment: Alignment.center,
+                    child:  Text("メニュー一覧",style: TextStyle(
+                        color:Colors.white,
+                        fontSize: 16
+                    )
                     ),
-                    ListTile(
-                      title: Text("アプリの使い方"),
-                      onTap: () {
-
-                      },
-                    ),
-                    ListTile(
-                      title: Text("トイレ情報修正案"),
-                      subtitle: Text("（Google Forms）"),
-                      onTap: () async {
-                        final url = Uri.parse(
-                          'https://docs.google.com/forms/d/e/1FAIpQLSczt2P7yPl4FXtT-qYfXxHPoC3Y5-mcmeffyrtmWByZRISCXA/viewform',
-                        );
-                        if (await canLaunchUrl(url)) {
-                          launchUrl(url);
-                        } else {
-                          print("Can't launch $url");
-                        }
-                      },
-                    ),
-                    ListTile(
-                      title: Text("アプリの評価"),
-                      subtitle: Text("（Google Forms）"),
-                      onTap: () async {
-                        final url = Uri.parse(
-                          'https://docs.google.com/forms/d/e/1FAIpQLScuUDQ81k8TPi2w15trgbMQeUhq_fFTafpPZZF86vfldDPt0g/viewform',
-                        );
-                        if (await canLaunchUrl(url)) {
-                          launchUrl(url);
-                        } else {
-                          print("Can't launch $url");
-                        }
-                      },
-                    ),
-                    ExpansionTile(
-                      title: Row(
+                  ),
+                  ListTile(
+                    //次ページへ
+                    title: Text("アプリの使い方"),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AppUsage(), // SecondPageは遷移先のクラス
+                        ),
+                      );
+                    },
+                  ),
+                  ListTile(
+                    title: Text("トイレ情報修正案"),
+                    subtitle: Text("（Google Forms）"),
+                    onTap: () async {
+                      final url = Uri.parse(
+                        'https://docs.google.com/forms/d/e/1FAIpQLSczt2P7yPl4FXtT-qYfXxHPoC3Y5-mcmeffyrtmWByZRISCXA/viewform',
+                      );
+                      if (await canLaunchUrl(url)) {
+                        launchUrl(url);
+                      } else {
+                        print("Can't launch $url");
+                      }
+                    },
+                  ),
+                  ListTile(
+                    title: Text("アプリの評価"),
+                    subtitle: Text("（Google Forms）"),
+                    onTap: () async {
+                      final url = Uri.parse(
+                        'https://docs.google.com/forms/d/e/1FAIpQLScuUDQ81k8TPi2w15trgbMQeUhq_fFTafpPZZF86vfldDPt0g/viewform',
+                      );
+                      if (await canLaunchUrl(url)) {
+                        launchUrl(url);
+                      } else {
+                        print("Can't launch $url");
+                      }
+                    },
+                  ),
+                  ExpansionTile(
+                    title: Row(
                         children:[
                           Icon(Icons.settings_applications),
-                          Text(" 最短ルート探索の設定"),
+                          Text(" 最短ルート検索の設定"),
                         ]
-                      ),
-                      children: [
-                        SwitchListTile(
+                    ),
+                    children: [
+                      SwitchListTile(
                           title: Column(
                             children: [
                               Text('公衆トイレを',style: TextStyle(fontSize: 12)),
@@ -255,19 +260,19 @@ class _MyHomePageState extends State<MyHomePage> {
                           inactiveTrackColor: Colors.blueAccent,
                           value: _switch1,
                           onChanged: (bool value) {
-                              setState(() {
-                                _switch1 = value;
-                                _saveBool('bool1', value);
-                                print("_switch1");
-                              });
+                            setState(() {
+                              _switch1 = value;
+                              _saveBool('bool1', value);
+                              print("_switch1");
+                            });
                           }
                       ),
 
 
-                      ],
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                ],
+              ),
             ),
 
             TextButton(
@@ -293,7 +298,6 @@ class _MyHomePageState extends State<MyHomePage> {
             zyouhou3.add(elem.get('zyouhou3'));
             zyouhou3.add(elem.get('zyouhou4'));
             zyuusyo.add(elem.get('zyuusyo'));
-            color.add(elem.get('color'));
           });
           DLR.forEach((elem) {
             N.add(elem.get('namae'));
@@ -301,63 +305,66 @@ class _MyHomePageState extends State<MyHomePage> {
             K.add(elem.get('keido'));
             B.add(elem.get('kubun'));
           });
-
+//          現在地ローディング
+//           if (_loading) {
+//             return CircularProgressIndicator();
+//           }
           return gm;
         },
       ),
       bottomNavigationBar: SizedBox(
         height: 54,
         child :BottomAppBar(
-          color: Colors.orange,
-          child: Column(
-            children: [
-              Row(
-                  children: [
-                    //目的地
-                    Container(
+            color: Colors.orange,
+            child: Column(
+              children: [
+                Row(
+                    children: [
+                      //目的地
+                      Container(
+                          margin: EdgeInsets.only(left: 5,top: 3),
+                          child :SizedBox(
+                            width: 280,
+                            height: 45,
+                            child: ElevatedButton(
+                              onPressed: null,
+                              style: ButtonStyle(
+                                backgroundColor: MaterialStateProperty.all(Colors.white),
+                              ),
+                              child: Text(destination, textAlign: TextAlign.center, style: TextStyle(
+                                  color:Colors.black38,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold
+                              )
+                              ),
+
+                            ),
+                          )
+                      ),
+                      //距離
+                      Container(
                         margin: EdgeInsets.only(left: 5,top: 3),
-                        child :SizedBox(
-                          width: 280,
+                        child: SizedBox(
+                          width: 63,
                           height: 45,
                           child: ElevatedButton(
                             onPressed: null,
                             style: ButtonStyle(
                               backgroundColor: MaterialStateProperty.all(Colors.white),
                             ),
-                            child: Text(destination, textAlign: TextAlign.center, style: TextStyle(
+                            child: Text(totalDistance,  textAlign: TextAlign.center,style: TextStyle(
                                 color:Colors.black38,
                                 fontSize: 13,
                                 fontWeight: FontWeight.bold
-                            )
                             ),
-
-                          ),
-                        )
-                    ),
-                    //距離
-                    Container(
-                      margin: EdgeInsets.only(left: 5,top: 3),
-                      child: SizedBox(
-                        width: 63,
-                        height: 45,
-                        child: ElevatedButton(
-                          onPressed: null,
-                          style: ButtonStyle(
-                            backgroundColor: MaterialStateProperty.all(Colors.white),
-                          ),
-                          child: Text(totalDistance,  textAlign: TextAlign.center,style: TextStyle(
-                              color:Colors.black38,
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold
-                          ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ]
-              ),
-            ],
-          )
+                    ]
+                ),
+              ],
+            )
 
         ),
       ),
@@ -373,7 +380,7 @@ class _MyHomePageState extends State<MyHomePage> {
               height: 55,
               child: FloatingActionButton.extended(
                 tooltip: 'Action!',
-                label: Text('最短ルート探索', style: TextStyle(
+                label: Text('最短ルート検索', style: TextStyle(
                     color:Colors.white,
                     fontSize: 13,
                     fontWeight: FontWeight.bold
@@ -390,7 +397,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   }
                   print('distanceInMeters============================================');
                   for (int count=0; DLR.length > count; count++){
-                    //攻守トイレを含まず検索の場合スキップする
+                    //公衆トイレを含まず検索の場合スキップする
                     print(_switch1);
                     print(B[count]);
                     if ((_switch1 == false) && (B[count] == '公衆トイレ')) {
@@ -468,28 +475,27 @@ class _MyHomePageState extends State<MyHomePage> {
     final snapshot =
     await FirebaseFirestore.instance.collection('toire').get();
     documentList = snapshot.docs;
-
-      // print("##################################################### initialize1()");
-      // documentList.forEach((elem) {
-      //   print(elem.get('ido'));
-      //   print(elem.get('keido'));
-      //   print(elem.get('kubun'));
-      //   print(elem.get('namae'));
-      //   print(elem.get('zyouhou1'));
-      //   print(elem.get('zyouhou2'));
-      //   print(elem.get('zyouhou3'));
-      //   print(elem.get('zyouhou4'));
-      //   print(elem.get('zyuusyo'));
-      //   print(elem.get('color'));
-      // });
-      // print("##################################################### initialize1()");
-      initialize2();
-    }
+    // print("##################################################### initialize1() documentList");
+    // documentList.forEach((elem) {
+    //   print(elem.get('ido'));
+    //   print(elem.get('keido'));
+    //   print(elem.get('kubun'));
+    //   print(elem.get('namae'));
+    //   print(elem.get('zyouhou1'));
+    //   print(elem.get('zyouhou2'));
+    //   print(elem.get('zyouhou3'));
+    //   print(elem.get('zyouhou4'));
+    //   print(elem.get('zyuusyo'));
+    //   print(elem.get('color'));
+    // });
+    // print("##################################################### initialize1() documentList");
+    initialize2();
+  }
 
   Future<void> initialize2() async {
-
+    //await initialize1();
     initialize3();
-
+    //await _getUserLocation();
     line =  Divider(
       color: Colors.black54,
       thickness: 1,
@@ -499,9 +505,10 @@ class _MyHomePageState extends State<MyHomePage> {
     );
 
     //documentListから範囲制限をかけて取得
+
     DLR = documentList.where((documents) {
       if ((documents['ido'] < restriction1.latitude && documents['ido'] > restriction2.latitude)
-      && (documents['keido'] < restriction1.longitude && documents['keido'] > restriction2.longitude)) {
+          && (documents['keido'] < restriction1.longitude && documents['keido'] > restriction2.longitude)) {
         return true;
       } else {
         return false;
@@ -521,7 +528,6 @@ class _MyHomePageState extends State<MyHomePage> {
       print(elem.get('zyouhou3'));
       print(elem.get('zyouhou4'));
       print(elem.get('zyuusyo'));
-      print(elem.get('color'));
     });
     print('DLR===========================================================DLR');
 
@@ -536,18 +542,7 @@ class _MyHomePageState extends State<MyHomePage> {
       },
       markers: DLR.map((documents) => Marker(
         markerId: MarkerId(documents['namae']),
-        // icon: BitmapDescriptor.defaultMarkerWithHue(
-        //   documents['color']
-        // ),
-        //icon: colorList,
-        //icon: markercolor,
         icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-        // icon: BitmapDescriptor.defaultMarkerWithHue(
-        //   if (documents['kubun'] = 'コンビニ'){
-        //     BitmapDescriptor.hueRed
-        //   }
-        // ),
-        //icon: markercolor,
         position: LatLng(documents['ido'],documents['keido']),
         onTap: () {
           showModalBottomSheet(
@@ -578,8 +573,8 @@ class _MyHomePageState extends State<MyHomePage> {
                       Position position = await Geolocator.getCurrentPosition(
                           desiredAccuracy: LocationAccuracy.high);
                       points.addAll(
-                        [LatLng(position.latitude,position.longitude),
-                          LatLng(documents['ido'],documents['keido']),]
+                          [LatLng(position.latitude,position.longitude),
+                            LatLng(documents['ido'],documents['keido']),]
                       );
                       print(points);
                       await route.drawRoute(points, 'Test routes',
@@ -637,22 +632,21 @@ class _MyHomePageState extends State<MyHomePage> {
                     ],
                   ),
                   line,
-                       Row(
-                        children: [
-                          IconButton(
-                            onPressed: null,
-                            icon: Icon(Icons.other_houses),
-                            color: Colors.black54,
-                          ),
-                          Flexible(
-                            child: Container(
-                              padding:  EdgeInsets.only(right: 10.0),
-                              child:  Text(documents['zyouhou4']),
-                              ),
-                            ),
-                          // Text(documents['zyouhou4'],),
-                        ],
+                  Row(
+                    children: [
+                      IconButton(
+                        onPressed: null,
+                        icon: Icon(Icons.other_houses),
+                        color: Colors.black54,
                       ),
+                      Flexible(
+                        child: Container(
+                          padding:  EdgeInsets.only(right: 10.0),
+                          child:  Text(documents['zyouhou4']),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               );
             },
