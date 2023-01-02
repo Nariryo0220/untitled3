@@ -62,14 +62,15 @@ class _MyHomePageState extends State<MyHomePage> {
   //GoogleMap変数
   Position? currentPosition; //現在地を更新
   late StreamSubscription<Position> positionStream;
-  late LatLng _initialPosition; //初期位置
-  late bool _loading;
+  late LatLng initialPosition; //初期位置
+  late bool loading;
   late GoogleMap gm;
   late GoogleMapController _controller;
 
   //表示範囲制限用のLatlng
   late LatLng restriction1;
   late LatLng restriction2;
+  int Markercount = 0;
 
   //ルート変数
   List<LatLng> points = []; //pointsに入っている2点間をつなげてルートが引かれる
@@ -87,7 +88,7 @@ class _MyHomePageState extends State<MyHomePage> {
   double min = 100000.0;
   String Nmin = '';
   var Lmin = LatLng(0.0, 0.0);
-  var _switch1 = false;
+  var switch1 = false;
 
   final LocationSettings locationSettings = const LocationSettings(
     accuracy: LocationAccuracy.high, //正確性:highはAndroid(0-100m),iOS(10m)
@@ -95,16 +96,16 @@ class _MyHomePageState extends State<MyHomePage> {
   );
 
   //ボタンのON/OFFを記憶
-  _saveBool(String key, bool value) async {
-    print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% _saveBool()");
+  saveBool(String key, bool value) async {
+    print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% saveBool()");
     var prefs = await SharedPreferences.getInstance();
     prefs.setBool(key, value);
   }
-  _restoreValues() async {
-    print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% _restoreValues()");
+  restoreValues() async {
+    print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% restoreValues()");
     var prefs = await SharedPreferences.getInstance();
     setState(() {
-      _switch1 = prefs.getBool('bool1') ?? false;
+      switch1 = prefs.getBool('bool1') ?? false;
     });
   }
 
@@ -112,25 +113,24 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% initState()");
     super.initState();
-    _restoreValues();
-    _loading = true;
+    restoreValues();
+    loading = true;
     return;
   }
 
   //現在地を取得する
-  Future<void> _getUserLocation() async {
+  Future<void> getUserLocation() async {
     print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% _getUserLoacation()");
     Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high);
     print('初期現在地 $position');
     setState(() {
-      _initialPosition = LatLng(position.latitude, position.longitude);
-      _loading = false;
-
-      restriction1 = LatLng(_initialPosition.latitude + 0.0090133729745762,
-          _initialPosition.longitude + 0.010966404715491394);
-      restriction2 = LatLng(_initialPosition.latitude - 0.0090133729745762,
-          _initialPosition.longitude - 0.010966404715491394);
+      initialPosition = LatLng(position.latitude, position.longitude);
+      loading = false;
+      restriction1 = LatLng(initialPosition.latitude + 0.0090133729745762,
+          initialPosition.longitude + 0.010966404715491394);
+      restriction2 = LatLng(initialPosition.latitude - 0.0090133729745762,
+          initialPosition.longitude - 0.010966404715491394);
     });
   }
 
@@ -223,12 +223,12 @@ class _MyHomePageState extends State<MyHomePage> {
                           activeTrackColor: Colors.red,
                           inactiveThumbColor: Colors.lightBlueAccent,
                           inactiveTrackColor: Colors.blueAccent,
-                          value: _switch1,
+                          value: switch1,
                           onChanged: (bool value) {
                             setState(() {
-                              _switch1 = value;
-                              _saveBool('bool1', value);
-                              print("_switch1");
+                              switch1 = value;
+                              saveBool('bool1', value);
+                              print("switch1");
                             });
                           }
                       ),
@@ -269,7 +269,7 @@ class _MyHomePageState extends State<MyHomePage> {
             B.add(elem.get('kubun'));
           });
           //現在地ローディング
-          if (_loading) {
+          if (loading) {
             return Center(
                 child: CircularProgressIndicator()
             );
@@ -336,7 +336,24 @@ class _MyHomePageState extends State<MyHomePage> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            margin: EdgeInsets.only(top: 15),
+            margin: EdgeInsets.only(top: 8),
+            child: SizedBox(
+              width: 170,
+              height: 18,
+              child: FloatingActionButton.extended(
+                tooltip: 'Action!',
+                label: Text('周辺のトイレ $Markercount 件',
+                    style: TextStyle(
+                        color: Colors.black38,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold)),
+                backgroundColor: Colors.white,
+                onPressed: null,
+              ),
+            ),
+          ),
+          Container(
+            margin: EdgeInsets.only(top: 5),
             child: SizedBox(
               width: 170,
               height: 55,
@@ -360,9 +377,9 @@ class _MyHomePageState extends State<MyHomePage> {
                       'distanceInMeters============================================');
                   for (int count = 0; DLR.length > count; count++) {
                     //攻守トイレを含まず検索の場合スキップする
-                    print(_switch1);
+                    print(switch1);
                     print(B[count]);
-                    if ((_switch1 == false) && (B[count] == '公衆トイレ')) {
+                    if ((switch1 == false) && (B[count] == '公衆トイレ')) {
                       print('公衆トイレなので×');
                       continue;
                     }
@@ -392,7 +409,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   destination = Nmin;
                   points.addAll([
                     LatLng(
-                        _initialPosition.latitude, _initialPosition.longitude),
+                        initialPosition.latitude, initialPosition.longitude),
                     LatLng(Lmin.latitude, Lmin.longitude),
                   ]);
                   await route.drawRoute(points, 'Test routes',
@@ -461,7 +478,7 @@ class _MyHomePageState extends State<MyHomePage> {
     print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% initialize2()");
     await getFirestore();
     await checkPermission();
-    await _getUserLocation();
+    await getUserLocation();
 
     line = Divider(
       color: Colors.black54,
@@ -483,6 +500,7 @@ class _MyHomePageState extends State<MyHomePage> {
           return false;
         }
       }).toList();
+      Markercount = DLR.length;
       print('DLR===========================================================DLR');
       print(restriction1);
       print(restriction2);
@@ -506,7 +524,7 @@ class _MyHomePageState extends State<MyHomePage> {
     //GoogleMap変数
     gm = await GoogleMap(
       initialCameraPosition: CameraPosition(
-        target: _initialPosition,
+        target: initialPosition,
         zoom: 15,
       ),
       onMapCreated: (GoogleMapController controller) {
@@ -625,7 +643,6 @@ class _MyHomePageState extends State<MyHomePage> {
                           child: Text(documents['zyouhou4']),
                         ),
                       ),
-                      // Text(documents['zyouhou4'],),
                     ],
                   ),
                 ],
