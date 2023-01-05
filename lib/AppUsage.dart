@@ -7,7 +7,6 @@ class AppUsage extends StatefulWidget {
 
 class _AppUsageState extends State<AppUsage> {
   final _scrollController = ScrollController();
-  //final Decoration _deco;
 
   @override
   final _deco = BoxDecoration(

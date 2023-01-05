@@ -8,6 +8,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_maps_routes/google_maps_routes.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'PrivacyPolicy.dart';
 import 'AppUsage.dart';
 
 void main() async {
@@ -46,15 +47,15 @@ class _MyHomePageState extends State<MyHomePage> {
   List<DocumentSnapshot> DLR = [];
 
   //documentListに保管した値を個別に格納するList
-  List<double> ido = [];
-  List<double> keido = [];
-  List<String> kubun = [];
-  List<String> namae = [];
-  List<String> zyouhou1 = [];
-  List<String> zyouhou2 = [];
-  List<String> zyouhou3 = [];
-  List<String> zyouhou4 = [];
-  List<String> zyuusyo = [];
+  List<double> Llatitude = [];
+  List<double> Llongitude = [];
+  List<String> classification = [];
+  List<String> name = [];
+  List<String> phone = [];
+  List<String> parking = [];
+  List<String> toilets = [];
+  List<String> other = [];
+  List<String> address = [];
 
   //情報閲覧機能の線
   late Divider line;
@@ -159,7 +160,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                   ),
                   ListTile(
-                    //AppUsage（アプリの使い方）
+                    //PrivacyPolicy（アプリの使い方）
                     title: Text("アプリの使い方"),
                     onTap: () {
                       Navigator.push(
@@ -196,6 +197,17 @@ class _MyHomePageState extends State<MyHomePage> {
                       } else {
                         print("Can't launch $url");
                       }
+                    },
+                  ),
+                  ListTile(
+                    title: Text("プライバシーポリシー"),
+                    onTap: () async {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => PrivacyPolicy(),
+                        ),
+                      );
                     },
                   ),
                   ExpansionTile(
@@ -252,21 +264,21 @@ class _MyHomePageState extends State<MyHomePage> {
         builder: (context, snapshot) {
           print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% FutureBuilder");
           documentList.forEach((elem) {
-            ido.add(elem.get('ido'));
-            keido.add(elem.get('keido'));
-            kubun.add(elem.get('kubun'));
-            namae.add(elem.get('namae'));
-            zyouhou1.add(elem.get('zyouhou1'));
-            zyouhou2.add(elem.get('zyouhou2'));
-            zyouhou3.add(elem.get('zyouhou3'));
-            zyouhou3.add(elem.get('zyouhou4'));
-            zyuusyo.add(elem.get('zyuusyo'));
+            Llatitude.add(elem.get('Llatitude'));
+            Llongitude.add(elem.get('Llongitude'));
+            classification.add(elem.get('classification'));
+            name.add(elem.get('name'));
+            phone.add(elem.get('phone'));
+            parking.add(elem.get('parking'));
+            toilets.add(elem.get('toilets'));
+            other.add(elem.get('other'));
+            address.add(elem.get('address'));
           });
           DLR.forEach((elem) {
-            N.add(elem.get('namae'));
-            I.add(elem.get('ido'));
-            K.add(elem.get('keido'));
-            B.add(elem.get('kubun'));
+            N.add(elem.get('name'));
+            I.add(elem.get('Llatitude'));
+            K.add(elem.get('Llongitude'));
+            B.add(elem.get('classification'));
           });
           //現在地ローディング
           if (loading) {
@@ -458,16 +470,15 @@ class _MyHomePageState extends State<MyHomePage> {
       final snapshot = await FirebaseFirestore.instance.collection('toire').get();
       documentList = snapshot.docs;
       documentList.forEach((elem) {
-        print(elem.get('ido'));
-        print(elem.get('keido'));
-        print(elem.get('kubun'));
-        print(elem.get('namae'));
-        print(elem.get('zyouhou1'));
-        print(elem.get('zyouhou2'));
-        print(elem.get('zyouhou3'));
-        print(elem.get('zyouhou4'));
-        print(elem.get('zyuusyo'));
-        // print(elem.get('color'));
+        print(elem.get('Llatitude'));
+        print(elem.get('Llongitude'));
+        print(elem.get('classification'));
+        print(elem.get('name'));
+        print(elem.get('phone'));
+        print(elem.get('parking'));
+        print(elem.get('toilets'));
+        print(elem.get('other'));
+        print(elem.get('address'));
       });
       print("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% initialize1().access");
     }
@@ -491,10 +502,10 @@ class _MyHomePageState extends State<MyHomePage> {
     //documentListから範囲制限をかけて取得
     if (DLR.length == 0){
       DLR = documentList.where((documents) {
-        if ((documents['ido'] < restriction1.latitude &&
-            documents['ido'] > restriction2.latitude) &&
-            (documents['keido'] < restriction1.longitude &&
-                documents['keido'] > restriction2.longitude)) {
+        if ((documents['Llatitude'] < restriction1.latitude &&
+            documents['Llatitude'] > restriction2.latitude) &&
+            (documents['Llongitude'] < restriction1.longitude &&
+                documents['Llongitude'] > restriction2.longitude)) {
           return true;
         } else {
           return false;
@@ -506,16 +517,15 @@ class _MyHomePageState extends State<MyHomePage> {
       print(restriction2);
       print('MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM');
       DLR.forEach((elem) {
-        print(elem.get('ido'));
-        print(elem.get('keido'));
-        print(elem.get('kubun'));
-        print(elem.get('namae'));
-        print(elem.get('zyouhou1'));
-        print(elem.get('zyouhou2'));
-        print(elem.get('zyouhou3'));
-        print(elem.get('zyouhou4'));
-        print(elem.get('zyuusyo'));
-        // print(elem.get('color'));
+        print(elem.get('Llatitude'));
+        print(elem.get('Llongitude'));
+        print(elem.get('classification'));
+        print(elem.get('name'));
+        print(elem.get('phone'));
+        print(elem.get('parking'));
+        print(elem.get('toilets'));
+        print(elem.get('other'));
+        print(elem.get('address'));
       });
       print('DLR===========================================================DLR');
     }
@@ -525,16 +535,16 @@ class _MyHomePageState extends State<MyHomePage> {
     gm = await GoogleMap(
       initialCameraPosition: CameraPosition(
         target: initialPosition,
-        zoom: 15,
+        zoom: 16,
       ),
       onMapCreated: (GoogleMapController controller) {
         _controller = controller;
       },
       markers: DLR.map((documents) => Marker(
-        markerId: MarkerId(documents['namae']),
+        markerId: MarkerId(documents['name']),
         icon: BitmapDescriptor.defaultMarkerWithHue(
             BitmapDescriptor.hueRed),
-        position: LatLng(documents['ido'], documents['keido']),
+        position: LatLng(documents['Llatitude'], documents['Llongitude']),
         onTap: () {
           showModalBottomSheet(
             isScrollControlled: true,
@@ -549,7 +559,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     width: double.infinity,
                     color: Colors.blueAccent,
                     alignment: Alignment.center,
-                    child: Text(documents['namae'],
+                    child: Text(documents['name'],
                         style: TextStyle(
                             color: Colors.white, fontSize: 13)),
                   ),
@@ -561,14 +571,14 @@ class _MyHomePageState extends State<MyHomePage> {
                         points.clear();
                         route.routes.clear();
                       }
-                      destination = documents['namae'];
+                      destination = documents['name'];
                       //Geolocator.getCurrentPosition 現在地の座標を取得する
                       Position position =
                       await Geolocator.getCurrentPosition(
                           desiredAccuracy: LocationAccuracy.high);
                       points.addAll([
                         LatLng(position.latitude, position.longitude),
-                        LatLng(documents['ido'], documents['keido']),
+                        LatLng(documents['Llatitude'], documents['Llongitude']),
                       ]);
                       print(points);
                       await route.drawRoute(
@@ -593,7 +603,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         icon: Icon(Icons.place),
                         color: Colors.black54,
                       ),
-                      Text(documents['zyuusyo']),
+                      Text(documents['address']),
                     ],
                   ),
                   line,
@@ -604,7 +614,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         icon: Icon(Icons.local_phone),
                         color: Colors.black54,
                       ),
-                      Text(documents['zyouhou1']),
+                      Text(documents['phone']),
                     ],
                   ),
                   line,
@@ -615,7 +625,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         icon: Icon(Icons.local_parking),
                         color: Colors.black54,
                       ),
-                      Text(documents['zyouhou2']),
+                      Text(documents['parking']),
                     ],
                   ),
                   line,
@@ -626,7 +636,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         icon: Icon(Icons.accessible_outlined),
                         color: Colors.black54,
                       ),
-                      Text(documents['zyouhou3']),
+                      Text(documents['toilets']),
                     ],
                   ),
                   line,
@@ -640,7 +650,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       Flexible(
                         child: Container(
                           padding: EdgeInsets.only(right: 10.0),
-                          child: Text(documents['zyouhou4']),
+                          child: Text(documents['other']),
                         ),
                       ),
                     ],
