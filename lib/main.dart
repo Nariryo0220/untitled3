@@ -8,7 +8,6 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_maps_routes/google_maps_routes.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'PrivacyPolicy.dart';
 import 'AppUsage.dart';
 
 void main() async {
@@ -202,12 +201,14 @@ class _MyHomePageState extends State<MyHomePage> {
                   ListTile(
                     title: Text("プライバシーポリシー"),
                     onTap: () async {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => PrivacyPolicy(),
-                        ),
+                      final url = Uri.parse(
+                        'https://doc-hosting.flycricket.io/qing-sen-toirematsupu-privacy-policy/a50969e5-20bc-4078-8154-973983d95328/privacy',
                       );
+                      if (await canLaunchUrl(url)) {
+                        launchUrl(url);
+                      } else {
+                        print("Can't launch $url");
+                      }
                     },
                   ),
                   ExpansionTile(

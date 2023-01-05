@@ -69,21 +69,26 @@ class _AppUsageState extends State<AppUsage> {
                       Text(
                           '　　今の自分の現在地です。自分が移動すればアプリ\n'
                           '　　も同時に動きます。\n'),
-                      Text('③ 最短ルート検索',
+                      Text('③ 周辺のトイレ数',
+                        style: TextStyle(fontSize:15,fontWeight: FontWeight.bold),),
+                      Text(
+                          '　　自分を中心に縦1㎞×横1㎞の領域にあるトイレの\n'
+                          '　　数です。\n'),
+                      Text('④ 最短ルート検索',
                         style: TextStyle(fontSize:15,fontWeight: FontWeight.bold),),
                       Text(
                           '　　現在地から一番近いトイレを案内します。\n'),
-                      Text('④ ルート解除',
+                      Text('⑤ ルート解除',
                         style: TextStyle(fontSize:15,fontWeight: FontWeight.bold),),
                       Text(
                           '　　ルート検索後、ルートを解除することができるボ\n'
                           '　　タンです。\n'),
-                      Text('⑤ 目的地、距離',
+                      Text('⑥ 目的地、距離',
                         style: TextStyle(fontSize:15,fontWeight: FontWeight.bold),),
                       Text(
                           '　　ルート検索時に目標地点としているトイレの名前\n'
                           '　　と距離を表示します。\n'),
-                      Text('⑥ メニュー一覧',
+                      Text('⑦ メニュー一覧',
                         style: TextStyle(fontSize:15,fontWeight: FontWeight.bold),),
                       Text(
                           '　　メニューの内容は下画像の通りです。\n'),
